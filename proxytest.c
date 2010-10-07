@@ -97,15 +97,15 @@ main(int argc, char **argv){
 	evas_map_point_coord_set   (m, 0, x, yy, -z);
         evas_map_point_image_uv_set(m, 0, 0, h);
         evas_map_point_color_set   (m, 0, 128, 128, 128, 128);
-        
+
         evas_map_point_coord_set   (m, 1, xx, yy, -z);
         evas_map_point_image_uv_set(m, 1, w, h);
         evas_map_point_color_set   (m, 1, 128, 128, 128, 128);
-        
+
         evas_map_point_coord_set   (m, 2, xx, yy + h, -z);
         evas_map_point_image_uv_set(m, 2, w, 0);
         evas_map_point_color_set   (m, 2, 0, 0, 0, 0);
-        
+
         evas_map_point_coord_set   (m, 3, x, yy + h, -z);
         evas_map_point_image_uv_set(m, 3, 0, 0);
         evas_map_point_color_set   (m, 3, 0, 0, 0, 0);
