@@ -1,0 +1,37 @@
+externals {
+   external: "evasproxy";
+}
+
+collections {
+    group { name: "proxytest";
+	images {	
+	    image: "lucastractor.jpg" COMP;
+	}
+	parts {
+	    part {
+		name: "SourceObj";
+		description { state: "default" 0.0;
+		    align: 0.0 0.0;
+		    min: 100 100;
+		    max: 200 200;
+		    image.normal: "lucastractor.jpg";
+		}
+	    }
+	    part {
+		name: "Proxy";
+		type: EXTERNAL;
+		source: "evasproxy";
+		description { state: "default" 0.0;
+		    align: 1.0 0.0;
+		    min: 100 100;
+		    max: 200 200;
+		    params {
+			string: "source" "SourceObj";
+		    }
+		}
+	    }
+	}
+    }
+}
+
+// vim: set sw=4 sts=4 : 
