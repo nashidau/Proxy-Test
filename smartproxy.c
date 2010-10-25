@@ -23,6 +23,8 @@ Evas_Smart *smart;
 
 Evas_Object *bg;
 Evas_Object *text;
+int state = 0;
+
 
 Evas_Object *
 sp_add(Evas *e){
@@ -30,6 +32,23 @@ sp_add(Evas *e){
 	if (!smart)
 		smart = evas_smart_class_new(&smart_class);
 	return evas_object_smart_add(e, smart);
+}
+
+void
+sp_arrange(Evas_Object *o){
+	int basex, y, w;
+	int dx,ow;
+
+	state ++;
+
+	evas_object_geometry_get(bg, &basex, NULL, &w, NULL);
+	evas_object_geometry_get(text, NULL, &y, &ow, NULL);
+	dx = w - ow;
+
+	if (state >= dx) state = 0;
+
+	evas_object_move(text, basex + state, y);
+	return;
 }
 
 static void

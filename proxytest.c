@@ -6,6 +6,7 @@
 #include <Evas.h>
 #include <Ecore.h>
 #include <Ecore_Evas.h>
+#include <Edje.h>
 
 #include "smartproxy.h"
 
@@ -16,13 +17,32 @@ enum {
 	WINDOW_HEIGHT = 480,
 };
 
-static Evas_Object *label_add(Evas *e, int x, int y, const char *fmt);
+struct imageupdate {
+	Evas_Object *obj;
+	int cur, max;
+	const char **imagelist;
+	Evas_Object *proxy;
+};
+
+static Evas_Object *label_add(Evas *, int x, int y, const char *fmt, bool anim);
 static Evas_Object *textblock_add(Evas *e, int x, int y);
 static void key_down(void *, Evas *, Evas_Object *, void *);
 static void flip_map(Evas_Object *o);
 
+static Eina_Bool label_move(void *ov);
+static Eina_Bool image_next(void *ov);
+static Eina_Bool smart_animate(void *smart);
+
 static bool visible = true;
 static Eina_List *labels;
+
+static const char *lucases[] = {
+	"lucasyawn.jpg",
+	"lucasstamp.jpg",
+	"lucastractor.jpg",
+	"lucasscarf.jpg"
+};
+#define N_LUCAS ((int)(sizeof(lucases)/sizeof(lucases[0])))
 
 
 int
@@ -32,6 +52,7 @@ main(int argc, char **argv){
 	Evas_Object *bg, *img, *proxy;
 	bool rv;
 	int w,h;
+	struct imageupdate *iu;
 
 	ecore_init();
 	ecore_evas_init();
@@ -58,15 +79,21 @@ main(int argc, char **argv){
 	evas_object_focus_set(bg,true);
 	evas_object_show(bg);
 
-	label_add(e,10,0,"Source");
+	label_add(e,10,0,"Source",false);
 	img = evas_object_image_filled_add(e);
-	evas_object_image_file_set(img, "lucasstamp.jpg", NULL);
+	evas_object_image_file_set(img, lucases[0], NULL);
 	evas_object_image_size_get(img, &w, &h);
 	evas_object_resize(img, w, h);
 	evas_object_move(img, 10,10);
 	evas_object_show(img);
+	iu = malloc(sizeof(struct imageupdate));
+	iu->cur = 0;
+	iu->max = N_LUCAS;
+	iu->obj = img;
+	iu->imagelist = lucases;
+	ecore_timer_add(1.4, image_next, iu);
 
-	label_add(e,20+w,0,"Normal Proxy");
+	label_add(e,20+w,0,"Normal Proxy",false);
 	proxy = evas_object_proxy_add(e);
 	if (!proxy){
 		printf("Unable to create proxy object\n");
@@ -79,46 +106,29 @@ main(int argc, char **argv){
 	}
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 20 + w, 10);
+	/* If this is uncommented: Moves proxy evyer second (swap x/y) */
+	//iu->proxy = proxy;
 	evas_object_show(proxy);
-
-	label_add(e,10,h + 20, "Reflected Proxy");
+//#if 0
+	label_add(e,10,h + 20, "Reflected Proxy",false);
 	proxy = evas_object_proxy_add(e);
 	evas_object_proxy_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 10, 30+h);
 	evas_object_show(proxy);
-
-	/*
-	m = evas_map_new(4);
-	x = 10;
-	y = 30 + h;
-	xx = 10 + w;
-	yy = 30 + h;
-	z = 0;
-
-	evas_map_point_coord_set   (m, 0, x, yy, -z);
-        evas_map_point_image_uv_set(m, 0, 0, h);
-        evas_map_point_color_set   (m, 0, 128, 128, 128, 128);
-
-        evas_map_point_coord_set   (m, 1, xx, yy, -z);
-        evas_map_point_image_uv_set(m, 1, w, h);
-        evas_map_point_color_set   (m, 1, 128, 128, 128, 128);
-
-        evas_map_point_coord_set   (m, 2, xx, yy + h, -z);
-        evas_map_point_image_uv_set(m, 2, w, 0);
-        evas_map_point_color_set   (m, 2, 0, 0, 0, 0);
-
-        evas_map_point_coord_set   (m, 3, x, yy + h, -z);
-        evas_map_point_image_uv_set(m, 3, 0, 0);
-        evas_map_point_color_set   (m, 3, 0, 0, 0, 0);
-
-	evas_object_map_enable_set(proxy, 1);
-        evas_object_map_set(proxy, m);
-*/
 	flip_map(proxy);
 
+	label_add(e,20+w,h+20,"Squish Proxy",false);
+	proxy = evas_object_proxy_add(e);
+	evas_object_proxy_source_set(proxy, img);
+	evas_object_resize(proxy, w, h / 2);
+	evas_object_move(proxy, 20+w, 30+h);
+	evas_object_show(proxy);
+
+
+
 	/* Proxy a label */
-	img = label_add(e, 300, 10, "Label Source");
+	img = label_add(e, 300, 10, "Label Source ",true);
 	evas_object_geometry_get(img, NULL, NULL, &w, &h);
 	proxy = evas_object_proxy_add(e);
 	evas_object_proxy_source_set(proxy, img);
@@ -126,6 +136,14 @@ main(int argc, char **argv){
 	evas_object_move(proxy, 300, 10 + h + 3);
 	evas_object_show(proxy);
 	flip_map(proxy);
+
+	label_add(e, 440, 10, "Squish Label",false);
+	proxy = evas_object_proxy_add(e);
+	evas_object_proxy_source_set(proxy, img);
+	evas_object_resize(proxy, w, h / 2);
+	evas_object_move(proxy, 440, 10 + h + 3);
+	evas_object_show(proxy);
+
 
 	/* Proxy a text block */
 	img = textblock_add(e, 10, 200);
@@ -142,7 +160,7 @@ main(int argc, char **argv){
 	img = sp_add(e);
 	evas_object_move(img, 300,200);
 	evas_object_resize(img, 100, 20);
-//	evas_object_geometry_get(img, NULL, NULL, &w, &h);
+	ecore_timer_add(0.05, smart_animate, img);
 	w = 100;
 	h = 20;
 	proxy = evas_object_proxy_add(e);
@@ -153,7 +171,15 @@ main(int argc, char **argv){
 	flip_map(proxy);
 
 
+	label_add(e, 300,90, "Edje File", false);
+	img = edje_object_add(e);
+	edje_object_file_set(img, "basic.edj", "proxytest");
+	evas_object_resize(img,220,200);
+	evas_object_move(img,300,100);
+	evas_object_show(img);
 
+
+//#endif
 	ecore_evas_show(ee);
 	ecore_main_loop_begin();
 
@@ -167,8 +193,9 @@ main(int argc, char **argv){
  * @todo: Make fmt a printf fmt string
  */
 Evas_Object *
-label_add(Evas *e, int x, int y, const char *fmt){
+label_add(Evas *e, int x, int y, const char *fmt, bool anim){
 	Evas_Object *o;
+	Ecore_Timer *timer;
 
 	if (!e) return NULL;
 
@@ -185,7 +212,52 @@ label_add(Evas *e, int x, int y, const char *fmt){
 
 	labels = eina_list_append(labels, o);
 
+	if (!anim) return o;
+
+	timer = ecore_timer_add(0.1, label_move, o);
+
 	return o;
+}
+
+static Eina_Bool
+label_move(void *ov){
+	char *str,t;
+	int len;
+
+	str = strdup(evas_object_text_text_get(ov));
+	t = *str;
+	len = strlen(str);
+	memmove(str,str+1,len - 1);
+	str[len - 1] = t;
+	evas_object_text_text_set(ov, str);
+	free(str);
+
+	return true;
+}
+
+static Eina_Bool
+image_next(void *info){
+	struct imageupdate *iu = info;
+	if (!info) return false;
+
+	iu->cur ++;
+	if (iu->cur >= iu->max) iu->cur = 0;
+
+	evas_object_image_file_set(iu->obj, iu->imagelist[iu->cur], NULL);
+
+	if (iu->proxy){
+		int x,y;
+		evas_object_geometry_get(iu->proxy, &x, &y, NULL, NULL);
+		evas_object_move(iu->proxy, y, x);
+	}
+
+	return true;
+}
+
+static Eina_Bool
+smart_animate(void *smart){
+	sp_arrange(smart);
+	return true;
 }
 
 Evas_Object *
