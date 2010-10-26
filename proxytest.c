@@ -50,7 +50,7 @@ static const char *lucases[] = {
 
 int
 main(int argc, char **argv){
-	Ecore_Evas *ee;
+	Ecore_Evas *ee = NULL;
 	Evas *e;
 	Evas_Object *bg, *img, *proxy;
 	bool rv;
@@ -61,8 +61,16 @@ main(int argc, char **argv){
 	ecore_init();
 	ecore_evas_init();
 
+	if (argv[1] && strcmp(argv[1],"-gl") == 0){
+		ee = ecore_evas_gl_x11_new(NULL, 0, 0, 0,
+				WINDOW_WIDTH,WINDOW_HEIGHT);
+		printf("GL!\n");
+	}
+
 	/* FIXME: Also support GL engine */
-	ee = ecore_evas_software_x11_new(NULL,0,0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
+	if (!ee)
+		ee = ecore_evas_software_x11_new(NULL,0,0,0,
+				WINDOW_WIDTH,WINDOW_HEIGHT);
 	if (!ee){
 		printf("Unable to create ecore evas\n");
 		return 1;
@@ -152,14 +160,14 @@ main(int argc, char **argv){
 	proxy = evas_object_proxy_add(e);
 	evas_object_proxy_source_set(proxy, img);
 	evas_object_resize(proxy, w, h * 3);
-	evas_object_move(proxy, 440, 40 + h + 3);
+	evas_object_move(proxy, 440, 60 + h + 3);
 	evas_object_show(proxy);
 
 	img = label_add(e, 400, 120, "Zoomy Text!", false);
 	proxy = evas_object_proxy_add(e);
 	evas_object_proxy_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
-	evas_object_move(proxy, 350, 120);
+	evas_object_move(proxy, 350, 150);
 	zoom_map(proxy);
 	evas_object_show(proxy);
 
