@@ -28,10 +28,13 @@ static Evas_Object *label_add(Evas *, int x, int y, const char *fmt, bool anim);
 static Evas_Object *textblock_add(Evas *e, int x, int y);
 static void key_down(void *, Evas *, Evas_Object *, void *);
 static void flip_map(Evas_Object *o);
+static void zoom_map(Evas_Object *o);
 
 static Eina_Bool label_move(void *ov);
 static Eina_Bool image_next(void *ov);
 static Eina_Bool smart_animate(void *smart);
+
+static Eina_Bool _edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group);
 
 static bool visible = true;
 static Eina_List *labels;
@@ -53,6 +56,7 @@ main(int argc, char **argv){
 	bool rv;
 	int w,h;
 	struct imageupdate *iu;
+	int minw,minh,maxw,maxh;
 
 	ecore_init();
 	ecore_evas_init();
@@ -144,6 +148,20 @@ main(int argc, char **argv){
 	evas_object_move(proxy, 440, 10 + h + 3);
 	evas_object_show(proxy);
 
+	label_add(e, 440, 60, "Stretch Label",false);
+	proxy = evas_object_proxy_add(e);
+	evas_object_proxy_source_set(proxy, img);
+	evas_object_resize(proxy, w, h * 3);
+	evas_object_move(proxy, 440, 40 + h + 3);
+	evas_object_show(proxy);
+
+	img = label_add(e, 400, 120, "Zoomy Text!", false);
+	proxy = evas_object_proxy_add(e);
+	evas_object_proxy_source_set(proxy, img);
+	evas_object_resize(proxy, w, h);
+	evas_object_move(proxy, 350, 120);
+	zoom_map(proxy);
+	evas_object_show(proxy);
 
 	/* Proxy a text block */
 	img = textblock_add(e, 10, 200);
@@ -170,13 +188,27 @@ main(int argc, char **argv){
 	evas_object_show(proxy);
 	flip_map(proxy);
 
-
+#if 0
 	label_add(e, 300,90, "Edje File", false);
 	img = edje_object_add(e);
-	edje_object_file_set(img, "basic.edj", "proxytest");
+	if (!_edje_load_or_show_error(img, "basic.edj", "proxytest")){
+		  evas_object_del(img);
+	}
+
 	evas_object_resize(img,220,200);
 	evas_object_move(img,300,100);
 	evas_object_show(img);
+	edje_object_size_max_get(img, &maxw, &maxh);
+	edje_object_size_min_get(img, &minw, &minh);
+	if ((minw <= 0) && (minh <= 0))
+		edje_object_size_min_calc(img, &minw, &minh);
+	evas_object_size_hint_max_set(img, maxw, maxh);
+	evas_object_size_hint_min_set(img, minw, minh);
+	evas_object_size_hint_weight_set(img,
+			EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+	evas_object_size_hint_align_set(img, EVAS_HINT_FILL, EVAS_HINT_FILL);
+#endif /* The edje file */
+
 
 
 //#endif
@@ -341,6 +373,38 @@ flip_map(Evas_Object *o){
 }
 
 
+static void
+zoom_map(Evas_Object *o){
+	int x, y, w, h;
+	Evas_Map *m;
+
+	evas_object_geometry_get(o, &x, &y, &w, &h);
+	h = h * 3;
+
+	m = evas_map_new(4);
+
+	evas_map_point_coord_set   (m, 0, x + w/2, y, 0);
+        evas_map_point_image_uv_set(m, 0, 0, 0);
+        evas_map_point_color_set   (m, 0, 255, 255, 255, 255);
+
+        evas_map_point_coord_set   (m, 1, x + w + w/2, y, 0);
+        evas_map_point_image_uv_set(m, 1, w, 0);
+        evas_map_point_color_set   (m, 1, 255, 255, 255, 255);
+
+        evas_map_point_coord_set   (m, 2, x + 2 * w, y + h, 0);
+        evas_map_point_image_uv_set(m, 2, w, h);
+        evas_map_point_color_set   (m, 2, 255, 255, 255, 255);
+
+        evas_map_point_coord_set   (m, 3, x, y + h, 0);
+        evas_map_point_image_uv_set(m, 3, 0, h);
+        evas_map_point_color_set   (m, 3, 255, 255, 255, 255);
+
+	evas_object_map_enable_set(o, 1);
+        evas_object_map_set(o, m);
+	evas_map_free(m);
+}
+
+
 void
 key_down(void *data, Evas *e, Evas_Object *obj, void *ev){
 	Evas_Event_Key_Down *key = ev;
@@ -359,4 +423,24 @@ key_down(void *data, Evas *e, Evas_Object *obj, void *ev){
 	} else if (streq(key->keyname,"q") || streq(key->keyname, "Escape")){
 		ecore_main_loop_quit();
 	}
+}
+
+/* straight from edje player */
+static Eina_Bool
+_edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group)
+{
+   const char *errmsg;
+   int err;
+
+   if (edje_object_file_set(edje, file, group))
+     {
+        evas_object_focus_set(edje, EINA_TRUE);
+        return EINA_TRUE;
+     }
+
+   err = edje_object_load_error_get(edje);
+   errmsg = edje_load_error_str(err);
+   fprintf(stderr, "ERROR: could not load edje file '%s', group '%s': %s\n",
+	   file, group, errmsg);
+   return EINA_FALSE;
 }
