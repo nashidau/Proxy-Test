@@ -58,6 +58,8 @@ main(int argc, char **argv){
 	struct imageupdate *iu;
 	int minw,minh,maxw,maxh;
 
+	srand(time(NULL));
+
 	ecore_init();
 	ecore_evas_init();
 
@@ -98,7 +100,7 @@ main(int argc, char **argv){
 	evas_object_resize(img, w, h);
 	evas_object_move(img, 10,10);
 	evas_object_show(img);
-	iu = malloc(sizeof(struct imageupdate));
+	iu = calloc(1,sizeof(struct imageupdate));
 	iu->cur = 0;
 	iu->max = N_LUCAS;
 	iu->obj = img;
@@ -195,6 +197,19 @@ main(int argc, char **argv){
 	evas_object_move(proxy, 300, 240);
 	evas_object_show(proxy);
 	flip_map(proxy);
+
+	img = evas_object_proxy_add(e);
+	proxy = evas_object_proxy_add(e);
+	evas_object_move(img, 500, 300);
+	evas_object_move(proxy, 600, 300);
+	evas_object_resize(img, 100, 100);
+	evas_object_resize(proxy, 100, 100);
+	evas_object_show(img);
+	evas_object_show(proxy);
+	evas_object_proxy_source_set(img, proxy);
+	evas_object_proxy_source_set(proxy, img);
+
+
 
 #if 0
 	label_add(e, 300,90, "Edje File", false);
