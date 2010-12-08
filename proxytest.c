@@ -108,12 +108,12 @@ main(int argc, char **argv){
 	ecore_timer_add(1.4, image_next, iu);
 
 	label_add(e,20+w,0,"Normal Proxy",false);
-	proxy = evas_object_proxy_add(e);
+	proxy = evas_object_image_filled_add(e);
 	if (!proxy){
 		printf("Unable to create proxy object\n");
 		return 1;
 	}
-	rv = evas_object_proxy_source_set(proxy, img);
+	rv = evas_object_image_source_set(proxy, img);
 	if (rv != true){
 		printf("Error setting proxy source\n");
 		return 1;
@@ -123,51 +123,61 @@ main(int argc, char **argv){
 	/* If this is uncommented: Moves proxy evyer second (swap x/y) */
 	//iu->proxy = proxy;
 	evas_object_show(proxy);
-//#if 0
 	label_add(e,10,h + 20, "Reflected Proxy",false);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 10, 30+h);
 	evas_object_show(proxy);
 	flip_map(proxy);
 
+
 	label_add(e,20+w,h+20,"Squish Proxy",false);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h / 2);
+	evas_object_image_fill_set(proxy, 0,0, w, h/2);
 	evas_object_move(proxy, 20+w, 30+h);
 	evas_object_show(proxy);
-
-
 
 	/* Proxy a label */
 	img = label_add(e, 300, 10, "Label Source ",true);
 	evas_object_geometry_get(img, NULL, NULL, &w, &h);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 300, 10 + h + 3);
 	evas_object_show(proxy);
 	flip_map(proxy);
 
 	label_add(e, 440, 10, "Squish Label",false);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h / 2);
+	evas_object_image_fill_set(proxy, 0,0,w,h/2);
 	evas_object_move(proxy, 440, 10 + h + 3);
 	evas_object_show(proxy);
 
 	label_add(e, 440, 60, "Stretch Label",false);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
-	evas_object_resize(proxy, w, h * 3);
+	proxy = evas_object_image_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w, h);
+	evas_object_image_fill_set(proxy, 0,0,w, h);
 	evas_object_move(proxy, 440, 60 + h + 3);
 	evas_object_show(proxy);
 
+	label_add(e, 240, 60, "Highlight", false);
+	proxy = evas_object_image_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, 50,50);
+	evas_object_image_fill_set(proxy, -w/2,-h/2,w*3,h*3);
+	evas_object_move(proxy, 250, 60 + h + 3);
+	evas_object_show(proxy);
+
+
 	img = label_add(e, 400, 120, "Zoomy Text!", false);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 350, 150);
 	zoom_map(proxy);
@@ -177,8 +187,8 @@ main(int argc, char **argv){
 	img = textblock_add(e, 10, 200);
 
 	evas_object_geometry_get(img, NULL, NULL, &w, &h);
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 10, 320);
 	evas_object_show(proxy);
@@ -191,24 +201,33 @@ main(int argc, char **argv){
 	ecore_timer_add(0.05, smart_animate, img);
 	w = 100;
 	h = 20;
-	proxy = evas_object_proxy_add(e);
-	evas_object_proxy_source_set(proxy, img);
+
+
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 300, 240);
 	evas_object_show(proxy);
 	flip_map(proxy);
 
-	img = evas_object_proxy_add(e);
-	proxy = evas_object_proxy_add(e);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w * 2, h / 3);
+	evas_object_image_fill_set(proxy, 0, 0, w * 2, h /3 );
+	evas_object_move(proxy, 420, 240);
+	evas_object_show(proxy);
+
+
+	img = evas_object_image_filled_add(e);
+	proxy = evas_object_image_filled_add(e);
 	evas_object_move(img, 500, 300);
 	evas_object_move(proxy, 600, 300);
 	evas_object_resize(img, 100, 100);
 	evas_object_resize(proxy, 100, 100);
 	evas_object_show(img);
 	evas_object_show(proxy);
-	evas_object_proxy_source_set(img, proxy);
-	evas_object_proxy_source_set(proxy, img);
-
+	evas_object_image_source_set(img, proxy);
+	evas_object_image_source_set(proxy, img);
 
 
 #if 0
@@ -233,8 +252,6 @@ main(int argc, char **argv){
 #endif /* The edje file */
 
 
-
-//#endif
 	ecore_evas_show(ee);
 	ecore_main_loop_begin();
 

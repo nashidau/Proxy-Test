@@ -72,6 +72,8 @@ smart_add(Evas_Object *obj){
 	evas_object_color_set(text, 180,10,110,255);
 	evas_object_smart_member_add(text, obj);
 	evas_object_show(text);
+
+	evas_object_show(obj);
 }
 
 static void
