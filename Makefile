@@ -5,9 +5,10 @@ LDFLAGS+=`pkg-config --libs ${PKGS}`
 
 .PHONY: default
 
-default: proxytest basic.edj
+default: proxytest proxytest2 basic.edj
 
 proxytest: proxytest.c smartproxy.c
+proxytest2: proxytest2.c smartproxy.c
 
 basic.edj: basic.edc
 	edje_cc basic.edc

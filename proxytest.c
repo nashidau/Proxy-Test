@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,8 +14,12 @@
 #define streq(a,b) (strcmp((a),(b)) == 0)
 
 enum {
+	MAGNIFIER_SCALE = 2,
+	MAGNIFIER_WIDTH = 150,
+	MAGNIFIER_HEIGHT = 150,
 	WINDOW_WIDTH = 640,
 	WINDOW_HEIGHT = 480,
+	IMAGE_PADDING = 0,
 };
 
 struct imageupdate {
@@ -43,31 +48,57 @@ static const char *lucases[] = {
 	"lucasyawn.jpg",
 	"lucasstamp.jpg",
 	"lucastractor.jpg",
-	"lucasscarf.jpg"
+	"lucasscarf.jpg",
+//	"img01.jpg",
+	"img02.jpg"
+
 };
 #define N_LUCAS ((int)(sizeof(lucases)/sizeof(lucases[0])))
+
+static int set0(Evas *e);
+static int set1(Evas *e);
+
+
+static int (*const sets[])(Evas *e) = {
+	set0,
+	set1,
+};
+#define N_SETS	((int)(sizeof(sets)/sizeof(sets[0])))
 
 
 int
 main(int argc, char **argv){
 	Ecore_Evas *ee = NULL;
+	Evas_Object *bg;
 	Evas *e;
-	Evas_Object *bg, *img, *proxy;
-	bool rv;
-	int w,h;
-	struct imageupdate *iu;
-	int minw,minh,maxw,maxh;
+	int i;
+	int set = 0,usegl = 0;
 
 	srand(time(NULL));
 
 	ecore_init();
 	ecore_evas_init();
 
-	if (argv[1] && strcmp(argv[1],"-gl") == 0){
+	for (i = 0 ; i  < argc ; i ++){
+		char *arg = argv[i];
+		printf("Arg is %s\n",arg);
+		if (strcmp(arg,"-gl") == 0) usegl = 1;
+		if (arg[0] == '-' && isdigit(arg[1])){
+			set = strtol(arg + 1, NULL, 0);
+		}
+	}
+	if (set < 0 || set > N_SETS){
+		printf("Invalid set: 0 to %d only\n",set);
+		exit(1);
+	}
+
+	if (usegl){
 		ee = ecore_evas_gl_x11_new(NULL, 0, 0, 0,
 				WINDOW_WIDTH,WINDOW_HEIGHT);
+		if (!ee) exit(1);
 		printf("GL!\n");
 	}
+
 
 	/* FIXME: Also support GL engine */
 	if (!ee)
@@ -92,6 +123,23 @@ main(int argc, char **argv){
 			key_down, NULL);
 	evas_object_focus_set(bg,true);
 	evas_object_show(bg);
+
+	sets[set](e);
+
+	ecore_evas_show(ee);
+	ecore_main_loop_begin();
+
+	return 0;
+}
+
+
+int
+set0(Evas *e){
+	Evas_Object *img, *proxy;
+	bool rv;
+	int w,h;
+	struct imageupdate *iu;
+	//int minw,minh,maxw,maxh;
 
 	label_add(e,10,0,"Source",false);
 	img = evas_object_image_filled_add(e);
@@ -185,14 +233,20 @@ main(int argc, char **argv){
 
 	/* Proxy a text block */
 	img = textblock_add(e, 10, 200);
-
 	evas_object_geometry_get(img, NULL, NULL, &w, &h);
+
 	proxy = evas_object_image_filled_add(e);
 	evas_object_image_source_set(proxy, img);
 	evas_object_resize(proxy, w, h);
 	evas_object_move(proxy, 10, 320);
 	evas_object_show(proxy);
 	flip_map(proxy);
+
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w/2, h/2);
+	evas_object_move(proxy, 10 + w, 320);
+	evas_object_show(proxy);
 
 	/* The 'smart' object */
 	img = sp_add(e);
@@ -251,9 +305,11 @@ main(int argc, char **argv){
 	evas_object_size_hint_align_set(img, EVAS_HINT_FILL, EVAS_HINT_FILL);
 #endif /* The edje file */
 
+	return 0;
+}
 
-	ecore_evas_show(ee);
-	ecore_main_loop_begin();
+static int
+set1(Evas *e){
 
 	return 0;
 }
@@ -465,6 +521,7 @@ key_down(void *data, Evas *e, Evas_Object *obj, void *ev){
 	}
 }
 
+#if 0
 /* straight from edje player */
 static Eina_Bool
 _edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group)
@@ -484,3 +541,4 @@ _edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group)
 	   file, group, errmsg);
    return EINA_FALSE;
 }
+#endif
