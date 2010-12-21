@@ -2,3 +2,6 @@ proxytest
 basic.edj
 core
 .*.swp
+tags
+cscope.out
+proxytest2
