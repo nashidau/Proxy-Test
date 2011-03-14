@@ -49,8 +49,8 @@ static const char *lucases[] = {
 	"lucasstamp.jpg",
 	"lucastractor.jpg",
 	"lucasscarf.jpg",
-//	"img01.jpg",
-	"img02.jpg"
+	"img02.jpg",
+	"blue.png",
 
 };
 #define N_LUCAS ((int)(sizeof(lucases)/sizeof(lucases[0])))
@@ -87,7 +87,7 @@ main(int argc, char **argv){
 			set = strtol(arg + 1, NULL, 0);
 		}
 	}
-	if (set < 0 || set > N_SETS){
+	if (set < 0 || set >= N_SETS){
 		printf("Invalid set: 0 to %d only\n",set);
 		exit(1);
 	}
