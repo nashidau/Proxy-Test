@@ -1,4 +1,5 @@
 //gcc -g `pkg-config enlightenment --libs --cflags` test_proxy.c 
+#include <stdbool.h>
 
 #include <Eina.h>
 #include <Evas.h>
@@ -6,26 +7,23 @@
 #include <Ecore.h>
 #include <Ecore_Evas.h>
 
+
 static Evas_Object *obj, *o, *bg;
-static int show = 0;
 
 static Eina_Bool
 _timer(void *data)
 {
-   show = (show+1)%2;
-   printf("show %d\n", show);
-
-   if (show)
-     evas_object_show(obj);
-   else
+   if (evas_object_visible_get(obj))
      evas_object_hide(obj);
+   else
+     evas_object_show(obj);
    
-   return ECORE_CALLBACK_RENEW;
+   return true;
 }
 
 int main(int argc, char *argv[])
 {
-   Ecore_Evas *ee, *ee2;
+   Ecore_Evas *ee;
    Evas *e;
    int w, h;
 
@@ -35,10 +33,10 @@ int main(int argc, char *argv[])
    ecore_evas_init();
    edje_init();
    
-   /* ee = ecore_evas_software_x11_new(NULL, 0, 10, 10, 200, 200); */
-   /* ecore_evas_alpha_set(ee, 1); */
-   
    ee = ecore_evas_gl_x11_new(NULL, 0, 0, 0, 200, 200);
+   if (!ee)
+	   ee = ecore_evas_software_x11_new(NULL, 0, 10, 10, 200, 200);
+   ecore_evas_alpha_set(ee, 1);
    e = ecore_evas_get(ee);
    
    bg = evas_object_rectangle_add(e);
