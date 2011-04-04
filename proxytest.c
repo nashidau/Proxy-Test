@@ -17,8 +17,8 @@ enum {
 	MAGNIFIER_SCALE = 2,
 	MAGNIFIER_WIDTH = 150,
 	MAGNIFIER_HEIGHT = 150,
-	WINDOW_WIDTH = 640,
-	WINDOW_HEIGHT = 480,
+	WINDOW_WIDTH = 480,
+	WINDOW_HEIGHT = 800,
 	IMAGE_PADDING = 0,
 };
 
@@ -39,21 +39,19 @@ static Eina_Bool label_move(void *ov);
 static Eina_Bool image_next(void *ov);
 static Eina_Bool smart_animate(void *smart);
 
-static Eina_Bool _edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group);
-
 static bool visible = true;
 static Eina_List *labels;
 
-static const char *lucases[] = {
-	"lucasyawn.jpg",
-	"lucasstamp.jpg",
-	"lucastractor.jpg",
-	"lucasscarf.jpg",
+static const char *images[] = {
+	"sample-1.jpg",
+	"sample-2.jpg",
+	"sample-3.jpg",
+	"sample-4.jpg",
 	"img02.jpg",
 	"blue.png",
 
 };
-#define N_LUCAS ((int)(sizeof(lucases)/sizeof(lucases[0])))
+#define N_IMAGES ((int)(sizeof(images)/sizeof(images[0])))
 
 static int set0(Evas *e);
 static int set1(Evas *e);
@@ -121,6 +119,7 @@ main(int argc, char **argv){
 	evas_object_resize(bg, WINDOW_WIDTH, WINDOW_HEIGHT);
 	evas_object_event_callback_add(bg, EVAS_CALLBACK_KEY_DOWN,
 			key_down, NULL);
+	ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, (void*)key_down, NULL);
 	evas_object_focus_set(bg,true);
 	evas_object_show(bg);
 
@@ -141,18 +140,19 @@ set0(Evas *e){
 	struct imageupdate *iu;
 	//int minw,minh,maxw,maxh;
 
-	label_add(e,10,0,"Source",false);
+	label_add(e,10,0,"The Source",false);
 	img = evas_object_image_filled_add(e);
-	evas_object_image_file_set(img, lucases[0], NULL);
+	evas_object_image_file_set(img, images[0], NULL);
 	evas_object_image_size_get(img, &w, &h);
+	w = w/2; h = h/2;
 	evas_object_resize(img, w, h);
 	evas_object_move(img, 10,10);
 	evas_object_show(img);
 	iu = calloc(1,sizeof(struct imageupdate));
 	iu->cur = 0;
-	iu->max = N_LUCAS;
+	iu->max = N_IMAGES;
 	iu->obj = img;
-	iu->imagelist = lucases;
+	iu->imagelist = images;
 	ecore_timer_add(1.4, image_next, iu);
 
 	label_add(e,20+w,0,"Normal Proxy",false);
@@ -283,7 +283,6 @@ set0(Evas *e){
 	evas_object_image_source_set(img, proxy);
 	evas_object_image_source_set(proxy, img);
 
-
 #if 0
 	label_add(e, 300,90, "Edje File", false);
 	img = edje_object_add(e);
@@ -310,6 +309,78 @@ set0(Evas *e){
 
 static int
 set1(Evas *e){
+	Evas_Object *img, *proxy, *lbl;
+	int w,h;
+
+	/* create an image,, but don't show */
+	label_add(e,10,0,"Hidden Source",false);
+	img = evas_object_image_add(e);
+	evas_object_image_file_set(img, images[0], NULL);
+	/* don't do anything that may cause it to load */
+	w = 96; h = 98;
+	evas_object_resize(img, w, h);
+	evas_object_image_fill_set(img, 0, 0, w, h);
+	evas_object_move(img, 10,10);
+
+	label_add(e,w + 90,0,"Proxy",false);
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w, h);
+	evas_object_image_fill_set(proxy, 0, 0, w, h);
+	evas_object_move(proxy, w + 90, 10);
+	evas_object_show(proxy);
+
+	/*
+	 * Test a hidden label
+	 */
+	label_add(e, 10, 120, "Hidden Text", false);
+	lbl = label_add(e, 10, 120, "Can't See ME!", false);
+	evas_object_hide(lbl);
+
+	label_add(e, 200, 120, "Proxy Text", false);
+	w = 200; h = 200;
+	proxy =  evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, lbl);
+	evas_object_resize(proxy, w, h);
+	evas_object_image_fill_set(proxy, 0, 0, w, h);
+	evas_object_move(proxy, 200, 120);
+	evas_object_show(proxy);
+
+	/*
+	 * Invisible text block
+	 */
+	img = textblock_add(e, 600, 200);
+	evas_object_hide(img);
+	evas_object_geometry_get(img, NULL, NULL, &w, &h);
+
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w, h);
+	evas_object_move(proxy, 10, 320);
+	evas_object_show(proxy);
+	flip_map(proxy);
+
+
+	/*
+	 * Test an offscreen 'widget'
+	 */
+	img = sp_add(e);
+	evas_object_move(img, -300,200);
+	evas_object_resize(img, 100, 20);
+	ecore_timer_add(0.05, smart_animate, img);
+	w = 100;
+	h = 20;
+
+	proxy = evas_object_image_filled_add(e);
+	evas_object_image_source_set(proxy, img);
+	evas_object_resize(proxy, w, h);
+	evas_object_move(proxy, 300, 300);
+	evas_object_show(proxy);
+	flip_map(proxy);
+
+
+
+
 
 	return 0;
 }
@@ -317,8 +388,6 @@ set1(Evas *e){
 
 /**
  * Add a text object to the screen.
- *
- * @todo: Make fmt a printf fmt string
  */
 Evas_Object *
 label_add(Evas *e, int x, int y, const char *fmt, bool anim){
@@ -347,6 +416,7 @@ label_add(Evas *e, int x, int y, const char *fmt, bool anim){
 	return o;
 }
 
+/* Animate the string in a label */
 static Eina_Bool
 label_move(void *ov){
 	char *str,t;
@@ -363,6 +433,9 @@ label_move(void *ov){
 	return true;
 }
 
+/* Move to the next image in the list of images.
+ * Looping if necessary
+ */
 static Eina_Bool
 image_next(void *info){
 	struct imageupdate *iu = info;
@@ -382,12 +455,19 @@ image_next(void *info){
 	return true;
 }
 
+/* Cause the 'smart' object to update.
+ */
 static Eina_Bool
 smart_animate(void *smart){
 	sp_arrange(smart);
 	return true;
 }
 
+/**
+ * Add a textblock, and fill with text.
+ *
+ * Code comes straight from other examples.
+ */
 Evas_Object *
 textblock_add(Evas *e, int x, int y){
 	Evas_Object *o;
@@ -435,6 +515,12 @@ evas_object_textblock_text_markup_set
 	return o;
 }
 
+/**
+ * Flip a map upside down, and apply a wetfloor effect to it.
+ *
+ * So the top (bottom of the source) is 50% transparent fading to fully
+ * transparent.
+ */
 static void
 flip_map(Evas_Object *o){
 	int x, y, w, h;
@@ -468,7 +554,11 @@ flip_map(Evas_Object *o){
 	evas_map_free(m);
 }
 
-
+/*
+ * Create a 'star wars' text map for an object.
+ *
+ * So the top is narrow, and the bottom wide.
+ */
 static void
 zoom_map(Evas_Object *o){
 	int x, y, w, h;
@@ -500,13 +590,14 @@ zoom_map(Evas_Object *o){
 	evas_map_free(m);
 }
 
-
+/* Key down handler.
+ *
+ * Space hides the labels, q or escape exit.
+ */
 void
 key_down(void *data, Evas *e, Evas_Object *obj, void *ev){
 	Evas_Event_Key_Down *key = ev;
 	Eina_List *l;
-
-	if (!ev) return;
 
 	if (streq(key->keyname,"Space") || streq(key->keyname,"space")){
 		visible = !visible;
@@ -521,24 +612,3 @@ key_down(void *data, Evas *e, Evas_Object *obj, void *ev){
 	}
 }
 
-#if 0
-/* straight from edje player */
-static Eina_Bool
-_edje_load_or_show_error(Evas_Object *edje, const char *file, const char *group)
-{
-   const char *errmsg;
-   int err;
-
-   if (edje_object_file_set(edje, file, group))
-     {
-        evas_object_focus_set(edje, EINA_TRUE);
-        return EINA_TRUE;
-     }
-
-   err = edje_object_load_error_get(edje);
-   errmsg = edje_load_error_str(err);
-   fprintf(stderr, "ERROR: could not load edje file '%s', group '%s': %s\n",
-	   file, group, errmsg);
-   return EINA_FALSE;
-}
-#endif

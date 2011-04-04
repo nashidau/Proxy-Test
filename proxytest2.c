@@ -208,7 +208,7 @@ main(int argc, char **argv){
 	evas_object_image_fill_set(proxy, 0,0,w * MAGNIFIER_SCALE, h * MAGNIFIER_SCALE);
 	evas_object_move(proxy, 0, 10);
 	evas_object_color_set(proxy, 255,255,255,255);
-	evas_object_clip_set(proxy, mgf);
+//	evas_object_clip_set(proxy, mgf);
 	evas_object_data_set(proxy, "clip", mgf);
 	evas_object_pass_events_set(proxy,true);
 
